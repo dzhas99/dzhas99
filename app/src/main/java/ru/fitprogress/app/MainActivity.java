@@ -38,6 +38,7 @@ public final class MainActivity extends Activity {
         settings.setLoadsImagesAutomatically(true);
         settings.setDefaultTextEncodingName("UTF-8");
         web.setWebViewClient(new WebViewClient());
+        web.setWebChromeClient(new android.webkit.WebChromeClient());
         web.addJavascriptInterface(new Bridge(), "Native");
         setContentView(web);
         web.loadUrl("file:///android_asset/index.html");

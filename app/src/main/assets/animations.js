@@ -1,0 +1,80 @@
+'use strict';
+/* Offline SVG motion library. Schematics intentionally simplify anatomy and machine geometry.
+   Each exercise has two explicitly authored poses, interpolated for a continuous motion loop. */
+(function(){
+const F={head:[160,55],sl:[136,100],sr:[184,100],hl:[144,180],hr:[176,180],el:[120,147],er:[200,147],wl:[116,197],wr:[204,197],kl:[140,219],kr:[180,219],al:[139,262],ar:[181,262]};
+const S={head:[153,54],sl:[149,101],sr:[159,101],hl:[147,175],hr:[159,175],el:[162,143],er:[172,144],wl:[167,196],wr:[181,196],kl:[195,206],kr:[205,206],al:[224,256],ar:[233,256]};
+const POSES={
+chestpress:{mode:'side',equipment:'chestpress',from:{head:[153,56],sl:[147,104],sr:[157,103],hl:[146,176],hr:[157,176],el:[170,141],er:[180,145],wl:[201,127],wr:[210,129],kl:[198,195],kr:[204,195],al:[212,256],ar:[222,256]},to:{el:[208,112],er:[213,118],wl:[260,112],wr:[262,119]},direction:'Толкай рукояти вперёд'},
+incline:{mode:'side',equipment:'incline',from:{head:[209,91],sl:[185,122],sr:[178,128],hl:[122,178],hr:[129,177],el:[199,155],er:[192,161],wl:[199,128],wr:[190,136],kl:[165,206],kr:[169,212],al:[199,256],ar:[207,256]},to:{el:[201,114],er:[194,119],wl:[209,65],wr:[200,70]},direction:'Выжимай гантели вверх'},
+seatedrow:{mode:'side',equipment:'seatedrow',from:{head:[145,62],sl:[145,106],sr:[153,107],hl:[144,177],hr:[153,176],el:[209,136],er:[215,140],wl:[257,134],wr:[263,138],kl:[198,202],kr:[206,204],al:[229,249],ar:[235,250]},to:{el:[143,148],er:[152,149],wl:[169,136],wr:[179,140]},direction:'Тяни локти к себе'},
+legpress:{mode:'side',equipment:'legpress',from:{head:[133,78],sl:[125,117],sr:[130,121],hl:[130,180],hr:[140,179],el:[145,153],er:[157,157],wl:[157,171],wr:[164,172],kl:[181,169],kr:[191,172],al:[229,116],ar:[235,122]},to:{kl:[215,155],kr:[220,159],al:[261,117],ar:[267,123]},direction:'Разогни ноги без блокировки коленей'},
+lateral:{mode:'front',equipment:'dumbbell',from:{el:[119,150],er:[201,150],wl:[109,202],wr:[211,202]},to:{el:[88,105],er:[232,105],wl:[40,103],wr:[280,103]},direction:'Подними руки до уровня плеч'},
+curl:{mode:'front',equipment:'dumbbell',from:{el:[128,154],er:[192,154],wl:[120,205],wr:[200,205]},to:{el:[128,154],er:[192,154],wl:[139,115],wr:[181,115]},direction:'Сгибай локти, не качай корпус'},
+plank:{mode:'side',equipment:'floor',from:{head:[83,115],sl:[122,132],sr:[130,136],hl:[194,143],hr:[205,143],el:[115,179],er:[119,179],wl:[83,183],wr:[91,184],kl:[242,153],kr:[252,155],al:[288,180],ar:[296,182]},to:{head:[83,111],sl:[122,127],sr:[130,131],hl:[194,139],hr:[205,139],el:[115,178],er:[119,178],wl:[83,183],wr:[91,184],kl:[242,151],kr:[252,151],al:[288,180],ar:[296,182]},direction:'Удерживай прямую линию корпуса'},
+goblet:{mode:'front',equipment:'goblet',from:{head:[160,56],sl:[134,101],sr:[186,101],hl:[144,180],hr:[176,180],el:[126,132],er:[194,132],wl:[155,132],wr:[165,132],kl:[140,219],kr:[180,219],al:[135,262],ar:[185,262]},to:{head:[160,83],sl:[134,128],sr:[186,128],hl:[144,210],hr:[176,210],el:[126,160],er:[194,160],wl:[155,159],wr:[165,159],kl:[114,240],kr:[206,240],al:[135,262],ar:[185,262]},direction:'Сядь вниз с ровной спиной'},
+latpull:{mode:'front',equipment:'latpull',from:{head:[160,86],sl:[134,129],sr:[186,129],hl:[145,213],hr:[175,213],el:[111,83],er:[209,83],wl:[83,54],wr:[237,54],kl:[142,239],kr:[178,239],al:[141,268],ar:[179,268]},to:{el:[100,136],er:[220,136],wl:[111,118],wr:[209,118]},direction:'Опускай перекладину к груди'},
+rdl:{mode:'side',equipment:'dumbbell',from:{head:[153,54],sl:[149,100],sr:[159,100],hl:[147,177],hr:[159,177],el:[156,147],er:[169,151],wl:[158,203],wr:[173,203],kl:[166,217],kr:[174,217],al:[166,261],ar:[177,261]},to:{head:[252,107],sl:[226,130],sr:[221,136],hl:[146,176],hr:[155,177],el:[224,173],er:[225,178],wl:[229,218],wr:[239,222],kl:[172,220],kr:[180,220],al:[166,261],ar:[177,261]},direction:'Таз назад, спина остаётся ровной'},
+shoulderpress:{mode:'front',equipment:'dumbbell-seat',from:{el:[105,139],er:[215,139],wl:[105,99],wr:[215,99]},to:{el:[122,79],er:[198,79],wl:[130,34],wr:[190,34]},direction:'Выжми гантели вверх'},
+rear:{mode:'front',equipment:'rear',from:{el:[135,123],er:[185,123],wl:[156,132],wr:[164,132]},to:{el:[103,109],er:[217,109],wl:[63,115],wr:[257,115]},direction:'Разводи руки назад и в стороны'},
+triceps:{mode:'front',equipment:'triceps',from:{el:[133,144],er:[187,144],wl:[149,125],wr:[171,125]},to:{el:[133,144],er:[187,144],wl:[129,197],wr:[191,197]},direction:'Разгибай руки вниз'},
+calfraise:{mode:'front',equipment:'floor',from:{head:[160,56],sl:[136,101],sr:[184,101],hl:[144,180],hr:[176,180],el:[124,147],er:[196,147],wl:[116,191],wr:[204,191],kl:[140,219],kr:[180,219],al:[139,260],ar:[181,260]},to:{head:[160,45],sl:[136,90],sr:[184,90],hl:[144,169],hr:[176,169],el:[124,136],er:[196,136],wl:[116,180],wr:[204,180],kl:[140,208],kr:[180,208],al:[139,247],ar:[181,247]},direction:'Поднимись на носки'},
+pecdeck:{mode:'front',equipment:'pecdeck',from:{el:[105,127],er:[215,127],wl:[73,123],wr:[247,123]},to:{el:[137,131],er:[183,131],wl:[152,121],wr:[168,121]},direction:'Своди рукояти перед грудью'},
+legcurl:{mode:'side',equipment:'legcurl',from:{head:[145,62],sl:[145,106],sr:[155,106],hl:[146,173],hr:[155,173],el:[155,150],er:[166,154],wl:[166,171],wr:[174,176],kl:[200,179],kr:[206,183],al:[254,182],ar:[261,187]},to:{kl:[200,179],kr:[206,183],al:[218,240],ar:[224,244]},direction:'Сгибай ноги, контролируй валик'},
+hammer:{mode:'front',equipment:'dumbbell',from:{el:[128,154],er:[192,154],wl:[117,201],wr:[203,201]},to:{el:[128,154],er:[192,154],wl:[132,114],wr:[188,114]},direction:'Поднимай гантели без вращения кистей'},
+overheadtriceps:{mode:'front',equipment:'overhead',from:{el:[145,74],er:[175,74],wl:[156,123],wr:[164,123]},to:{el:[145,74],er:[175,74],wl:[141,27],wr:[179,27]},direction:'Разогни локти над головой'}
+};
+function pmerge(base,mod){return {...base,...mod}}
+function interpolate(A,B,t){const ret={};for(const key in A){const va=A[key],vb=B[key]||va;ret[key]=[va[0]+(vb[0]-va[0])*t,va[1]+(vb[1]-va[1])*t]}return ret}
+function coords(pt){return pt.map(v=>v.toFixed(1)).join(' ')}
+function eqBackground(type){let p='';const line='#425c75',bar='#68829a';
+ if(['chestpress','seatedrow','latpull','pecdeck','rear','triceps','overhead','legcurl','legpress'].includes(type))p+=`<path d="M37 267 V27 H283 V267" fill="none" stroke="${line}" stroke-width="5" opacity=".45"/>`;
+ if(['chestpress','seatedrow','legcurl','rear','pecdeck','latpull'].includes(type))p+='<path d="M108 180 H190 M121 180 V270 M183 180 V270" fill="none" stroke="#8aa4bc" stroke-width="9" stroke-linecap="round" opacity=".48"/>';
+ if(type==='incline')p+='<path d="M96 190 L194 103 M97 190 L92 268 M179 122 L220 268" stroke="#8ba6bb" stroke-width="12" stroke-linecap="round"/><path d="M96 190 L194 103" stroke="#2c5d62" stroke-width="7"/>';
+ if(type==='chestpress')p+='<path d="M124 178 V240 M124 177 L157 177 M121 109 V165" fill="none" stroke="#68829a" stroke-width="13" stroke-linecap="round"/>';
+ if(type==='seatedrow')p+='<path d="M245 152 L281 152 M239 179 H291" fill="none" stroke="#7a8fa7" stroke-width="8"/>';
+ if(type==='legpress')p+='<path d="M98 184 L149 94 M106 188 H151 M100 180 L98 268" fill="none" stroke="#758aa2" stroke-width="12" stroke-linecap="round"/><path d="M264 84 L288 156" fill="none" stroke="#dea268" stroke-width="13" stroke-linecap="round"/>';
+ if(type==='latpull')p+='<path d="M80 48 H240 M160 25 V47" fill="none" stroke="#c1a381" stroke-width="7" stroke-linecap="round"/><path d="M135 220 H185 M157 223 V269" stroke="#7895ac" stroke-width="12"/>';
+ if(type==='pecdeck'||type==='rear')p+='<path d="M139 191 H181 M160 190 V265" fill="none" stroke="#7c95a8" stroke-width="10"/><rect x="145" y="173" width="30" height="18" fill="#7792aa" rx="5"/>';
+ if(type==='legcurl')p+='<path d="M124 174 H209 M124 173 V263 M214 175 V245" stroke="#819bae" stroke-width="11" stroke-linecap="round"/><circle cx="220" cy="239" r="12" fill="#e4ad76" opacity=".7"/>';
+ if(type==='shoulderpress'||type==='dumbbell-seat')p+='<path d="M157 123 V189 M117 189 H204 M152 193 V260" stroke="#7893ab" stroke-width="13" stroke-linecap="round"/>';
+ if(type==='triceps')p+='<path d="M160 25 V112" stroke="#e2b07a" stroke-width="3"/><circle cx="160" cy="29" r="10" fill="none" stroke="#e2b07a" stroke-width="4"/>';
+ if(type==='overhead')p+='<path d="M296 40 V268 M275 40 H295 M294 46 L192 90" stroke="#c09c78" stroke-width="4"/>';
+ if(type==='floor')p+='<path d="M15 273 H305" stroke="#6c92a0" stroke-width="4" stroke-linecap="round" opacity=".85"/>';
+ return p;
+}
+function baseSvg(type,mode){return `<defs><linearGradient id="muscle" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#62efd0"/><stop offset="1" stop-color="#35a3b0"/></linearGradient><linearGradient id="person" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#dcecf3"/><stop offset="1" stop-color="#94b9ca"/></linearGradient></defs><g opacity=".30" stroke="#46708b" stroke-width="1"><path d="M20 49 H300 M20 94 H300 M20 140 H300 M20 186 H300 M20 232 H300 M20 278 H300"/><path d="M60 15 V284 M110 15 V284 M160 15 V284 M210 15 V284 M260 15 V284"/></g><g opacity=".8">${eqBackground(type)}</g><g id="human"><path id="torso" d="" fill="#387a86" stroke="#7bc9c8" stroke-width="2" opacity=".85"/><line id="neck" stroke="#b9d4e0" stroke-width="10" stroke-linecap="round"/><line id="legL1" stroke="url(#person)" stroke-width="16" stroke-linecap="round"/><line id="legR1" stroke="#9ab6c6" stroke-width="16" stroke-linecap="round"/><line id="legL2" stroke="url(#person)" stroke-width="13" stroke-linecap="round"/><line id="legR2" stroke="#a1b9c8" stroke-width="13" stroke-linecap="round"/><line id="footL" stroke="#d1e6ee" stroke-width="8" stroke-linecap="round"/><line id="footR" stroke="#bdd8e6" stroke-width="8" stroke-linecap="round"/><circle id="head" r="18" fill="#ddedf2" stroke="#9dbec9" stroke-width="2"/><line id="armL1" stroke="url(#person)" stroke-width="15" stroke-linecap="round"/><line id="armR1" stroke="#c9dfeb" stroke-width="15" stroke-linecap="round"/><line id="armL2" stroke="url(#person)" stroke-width="12" stroke-linecap="round"/><line id="armR2" stroke="#bcd5e1" stroke-width="12" stroke-linecap="round"/><circle id="elbowL" r="7" fill="#9fd6de"/><circle id="elbowR" r="7" fill="#9fd6de"/><circle id="handL" r="7" fill="#ddedf2"/><circle id="handR" r="7" fill="#ddedf2"/></g><g id="equipment-moving"></g><g><rect x="13" y="13" width="94" height="22" rx="11" fill="#225c54" stroke="#37776d"/><text x="60" y="28" text-anchor="middle" fill="#b4ffeb" font-size="10" font-weight="800">${mode==='front'?'ВИД СПЕРЕДИ':'ВИД СБОКУ'}</text></g>`}
+function attr(el,vals){if(!el)return;Object.entries(vals).forEach(([key,value])=>el.setAttribute(key,value))}
+function segment(svg,id,a,b){const el=svg.querySelector('#'+id);attr(el,{x1:a[0],y1:a[1],x2:b[0],y2:b[1]})}
+function dot(svg,id,x,y){attr(svg.querySelector('#'+id),{cx:x,cy:y})}
+function paint(svg,pose,def){const shoulder=[(pose.sl[0]+pose.sr[0])/2,(pose.sl[1]+pose.sr[1])/2],hips=[(pose.hl[0]+pose.hr[0])/2,(pose.hl[1]+pose.hr[1])/2];const pts=[pose.sl,pose.sr,pose.hr,pose.hl].map(coords).join(' ');
+ attr(svg.querySelector('#torso'),{d:`M ${coords(pose.sl)} L ${coords(pose.sr)} L ${coords(pose.hr)} L ${coords(pose.hl)} Z`});
+ dot(svg,'head',pose.head[0],pose.head[1]);segment(svg,'neck',[(pose.head[0]*.62+shoulder[0]*.38),(pose.head[1]*.62+shoulder[1]*.38)],shoulder);
+ segment(svg,'armL1',pose.sl,pose.el);segment(svg,'armR1',pose.sr,pose.er);segment(svg,'armL2',pose.el,pose.wl);segment(svg,'armR2',pose.er,pose.wr);
+ segment(svg,'legL1',pose.hl,pose.kl);segment(svg,'legR1',pose.hr,pose.kr);segment(svg,'legL2',pose.kl,pose.al);segment(svg,'legR2',pose.kr,pose.ar);
+ const footLength=def.mode==='front'?17:17;segment(svg,'footL',pose.al,[pose.al[0]+footLength,pose.al[1]+1]);segment(svg,'footR',pose.ar,[pose.ar[0]+footLength,pose.ar[1]+1]);
+ dot(svg,'elbowL',pose.el[0],pose.el[1]);dot(svg,'elbowR',pose.er[0],pose.er[1]);dot(svg,'handL',pose.wl[0],pose.wl[1]);dot(svg,'handR',pose.wr[0],pose.wr[1]);
+ const gear=svg.querySelector('#equipment-moving');let eq='';
+ const weight=(pt,rot=90)=>`<g transform="translate(${pt[0]} ${pt[1]}) rotate(${rot})"><rect x="-3" y="-17" width="6" height="34" rx="2" fill="#edba81"/><rect x="-8" y="-15" width="16" height="7" rx="2" fill="#edba81"/><rect x="-8" y="8" width="16" height="7" rx="2" fill="#edba81"/></g>`;
+ if(['dumbbell','dumbbell-seat','incline'].includes(def.equipment))eq+=weight(pose.wl)+(def.mode==='front'||def.equipment==='incline'?weight(pose.wr):'');
+ if(def.equipment==='goblet')eq+=`<rect x="148" y="${pose.wl[1]-12}" width="24" height="28" rx="6" fill="#e7b680" stroke="#ffdcad" stroke-width="2"/>`;
+ if(['chestpress','seatedrow'].includes(def.equipment)){eq+=`<path d="M${pose.wl[0]} ${pose.wl[1]} L${def.equipment==='chestpress'?280:278} ${def.equipment==='chestpress'?117:128}" stroke="#c9a67d" stroke-width="4" stroke-linecap="round" fill="none"/>`;
+ eq+=`<rect x="${pose.wl[0]-6}" y="${pose.wl[1]-13}" width="12" height="26" rx="3" fill="#e4b27d"/>`}
+ if(def.equipment==='latpull')eq+=`<path d="M ${pose.wl[0]} ${pose.wl[1]} L ${pose.wr[0]} ${pose.wr[1]}" stroke="#e8bd8c" stroke-width="6" stroke-linecap="round"/><path d="M 160 28 V ${Math.min(pose.wl[1],pose.wr[1])-1}" stroke="#d7a476" stroke-width="2"/>`;
+ if(['rear','pecdeck'].includes(def.equipment))eq+=`<circle cx="${pose.wl[0]}" cy="${pose.wl[1]}" r="10" fill="none" stroke="#e2aa73" stroke-width="5"/><circle cx="${pose.wr[0]}" cy="${pose.wr[1]}" r="10" fill="none" stroke="#e2aa73" stroke-width="5"/>`;
+ if(['triceps','overhead'].includes(def.equipment))eq+=`<path d="M ${pose.wl[0]} ${pose.wl[1]} L ${pose.wr[0]} ${pose.wr[1]}" stroke="#e6b884" stroke-width="5" stroke-linecap="round"/>`;
+ if(def.equipment==='legpress')eq+=`<rect x="${Math.max(pose.al[0],pose.ar[0])-4}" y="92" width="10" height="66" rx="4" fill="#efb47c" transform="rotate(-18 ${Math.max(pose.al[0],pose.ar[0])} 115)"/>`;
+ if(def.equipment==='legcurl')eq+=`<circle cx="${pose.ar[0]}" cy="${pose.ar[1]}" r="11" fill="#e3b37e" stroke="#f7d2a7" stroke-width="3" opacity=".95"/>`;
+ gear.innerHTML=eq;
+}
+let running=false,frame=0,startTime=0,speed=3250,svg=null,exId=null,frozen=null,pausedAt=.1;
+function phase(t){let p=((t%speed)+speed)%speed/speed;if(p<.08)return 0;if(p>.92)return 0;if(p<.46){let q=(p-.08)/.38;return q*q*(3-2*q)}if(p<.56)return 1;let q=(p-.56)/.36;return 1-q*q*(3-2*q)}
+function setPhase(t){const def=POSES[exId];if(!def||!svg)return;const p=interpolate(pmerge(def.mode==='front'?F:S,def.from),pmerge(pmerge(def.mode==='front'?F:S,def.from),def.to),t);paint(svg,p,def);const status=document.getElementById('pose-state');if(status)status.textContent=t>=.88?'Фаза усилия':t<=.12?'Исходное положение':'Выполнение движения'}
+function tick(ts){if(!running)return;setPhase(phase(ts-startTime));frame=requestAnimationFrame(tick)}
+function start(id){stop();exId=id;svg=document.getElementById('exercise-animation');if(!svg||!POSES[id])return;const d=POSES[id];svg.innerHTML=baseSvg(d.equipment,d.mode);setPhase(0);running=!window.matchMedia('(prefers-reduced-motion: reduce)').matches;frozen=null;startTime=performance.now();if(running)frame=requestAnimationFrame(tick);button()}
+function stop(){running=false;if(frame)cancelAnimationFrame(frame);frame=0;svg=null;exId=null}
+function button(){const el=document.getElementById('anim-play');if(!el)return;el.textContent=running?'❚❚ Пауза':'▶ Воспроизвести';el.classList.toggle('active',running)}
+function toggle(){if(!svg)return;if(running){running=false;cancelAnimationFrame(frame);frame=0;pausedAt=phase(performance.now()-startTime)}else{running=true;startTime=performance.now()-pausedAt*speed;frame=requestAnimationFrame(tick)}button()}
+function freeze(value){if(!svg)return;running=false;cancelAnimationFrame(frame);frame=0;pausedAt=value?0.51:0;setPhase(value);button()}
+window.AnimEngine={start,stop,toggle,freeze,poses:POSES};
+})();

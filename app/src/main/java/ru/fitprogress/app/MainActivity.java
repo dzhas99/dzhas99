@@ -108,7 +108,12 @@ public final class MainActivity extends Activity {
         }});
     }
     @Override public void onConfigurationChanged(Configuration config) { super.onConfigurationChanged(config); }
-    @Override public void onBackPressed() { super.onBackPressed(); }
+    @Override public void onBackPressed() {
+        if (web == null) { super.onBackPressed(); return; }
+        web.evaluateJavascript("window.handleAppBack ? window.handleAppBack() : false", result -> {
+            if (!"true".equals(result)) MainActivity.super.onBackPressed();
+        });
+    }
     @Override protected void onDestroy() {
         if (web != null) { web.destroy(); web = null; }
         super.onDestroy();

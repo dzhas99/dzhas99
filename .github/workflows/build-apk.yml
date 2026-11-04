@@ -2,7 +2,7 @@ name: Build ATLET Android APK
 on:
   push:
     branches:
-      - 'build/atlet-android-20261104'
+      - 'build/atlet-v2-animated-20261105'
   workflow_dispatch:
 
 jobs:
@@ -27,6 +27,6 @@ jobs:
         run: gradle --no-daemon assembleDebug
       - uses: actions/upload-artifact@v4
         with:
-          name: ATLET-APK
+          name: ATLET-v2-animated-APK
           path: app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error

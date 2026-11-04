@@ -52,7 +52,7 @@ function paint(svg,pose,def){const shoulder=[(pose.sl[0]+pose.sr[0])/2,(pose.sl[
  dot(svg,'head',pose.head[0],pose.head[1]);segment(svg,'neck',[(pose.head[0]*.62+shoulder[0]*.38),(pose.head[1]*.62+shoulder[1]*.38)],shoulder);
  segment(svg,'armL1',pose.sl,pose.el);segment(svg,'armR1',pose.sr,pose.er);segment(svg,'armL2',pose.el,pose.wl);segment(svg,'armR2',pose.er,pose.wr);
  segment(svg,'legL1',pose.hl,pose.kl);segment(svg,'legR1',pose.hr,pose.kr);segment(svg,'legL2',pose.kl,pose.al);segment(svg,'legR2',pose.kr,pose.ar);
- const footLength=def.mode==='front'?17:17;segment(svg,'footL',pose.al,[pose.al[0]+footLength,pose.al[1]+1]);segment(svg,'footR',pose.ar,[pose.ar[0]+footLength,pose.ar[1]+1]);
+ const footLength=17;const leftToe=def.equipment==='floor'&&exId==='calfraise'?[pose.al[0]+footLength,262]:[pose.al[0]+footLength,pose.al[1]+1];const rightToe=def.equipment==='floor'&&exId==='calfraise'?[pose.ar[0]+footLength,262]:[pose.ar[0]+footLength,pose.ar[1]+1];segment(svg,'footL',pose.al,leftToe);segment(svg,'footR',pose.ar,rightToe);
  dot(svg,'elbowL',pose.el[0],pose.el[1]);dot(svg,'elbowR',pose.er[0],pose.er[1]);dot(svg,'handL',pose.wl[0],pose.wl[1]);dot(svg,'handR',pose.wr[0],pose.wr[1]);
  const gear=svg.querySelector('#equipment-moving');let eq='';
  const weight=(pt,rot=90)=>`<g transform="translate(${pt[0]} ${pt[1]}) rotate(${rot})"><rect x="-3" y="-17" width="6" height="34" rx="2" fill="#edba81"/><rect x="-8" y="-15" width="16" height="7" rx="2" fill="#edba81"/><rect x="-8" y="8" width="16" height="7" rx="2" fill="#edba81"/></g>`;
@@ -67,14 +67,14 @@ function paint(svg,pose,def){const shoulder=[(pose.sl[0]+pose.sr[0])/2,(pose.sl[
  if(def.equipment==='legcurl')eq+=`<circle cx="${pose.ar[0]}" cy="${pose.ar[1]}" r="11" fill="#e3b37e" stroke="#f7d2a7" stroke-width="3" opacity=".95"/>`;
  gear.innerHTML=eq;
 }
-let running=false,frame=0,startTime=0,speed=3250,svg=null,exId=null,frozen=null,pausedAt=.1;
+let running=false,frame=0,startTime=0,speed=3250,svg=null,exId=null,frozen=null,pausedCycleOffset=0;
 function phase(t){let p=((t%speed)+speed)%speed/speed;if(p<.08)return 0;if(p>.92)return 0;if(p<.46){let q=(p-.08)/.38;return q*q*(3-2*q)}if(p<.56)return 1;let q=(p-.56)/.36;return 1-q*q*(3-2*q)}
 function setPhase(t){const def=POSES[exId];if(!def||!svg)return;const p=interpolate(pmerge(def.mode==='front'?F:S,def.from),pmerge(pmerge(def.mode==='front'?F:S,def.from),def.to),t);paint(svg,p,def);const status=document.getElementById('pose-state');if(status)status.textContent=t>=.88?'Фаза усилия':t<=.12?'Исходное положение':'Выполнение движения'}
 function tick(ts){if(!running)return;setPhase(phase(ts-startTime));frame=requestAnimationFrame(tick)}
-function start(id){stop();exId=id;svg=document.getElementById('exercise-animation');if(!svg||!POSES[id])return;const d=POSES[id];svg.innerHTML=baseSvg(d.equipment,d.mode);setPhase(0);running=!window.matchMedia('(prefers-reduced-motion: reduce)').matches;frozen=null;startTime=performance.now();if(running)frame=requestAnimationFrame(tick);button()}
+function start(id){stop();exId=id;svg=document.getElementById('exercise-animation');if(!svg||!POSES[id])return;const d=POSES[id];svg.innerHTML=baseSvg(d.equipment,d.mode);setPhase(0);running=!window.matchMedia('(prefers-reduced-motion: reduce)').matches;frozen=null;startTime=performance.now();pausedCycleOffset=0;if(running)frame=requestAnimationFrame(tick);button()}
 function stop(){running=false;if(frame)cancelAnimationFrame(frame);frame=0;svg=null;exId=null}
 function button(){const el=document.getElementById('anim-play');if(!el)return;el.textContent=running?'❚❚ Пауза':'▶ Воспроизвести';el.classList.toggle('active',running)}
-function toggle(){if(!svg)return;if(running){running=false;cancelAnimationFrame(frame);frame=0;pausedAt=phase(performance.now()-startTime)}else{running=true;startTime=performance.now()-pausedAt*speed;frame=requestAnimationFrame(tick)}button()}
-function freeze(value){if(!svg)return;running=false;cancelAnimationFrame(frame);frame=0;pausedAt=value?0.51:0;setPhase(value);button()}
+function toggle(){if(!svg)return;if(running){running=false;cancelAnimationFrame(frame);frame=0;pausedCycleOffset=(performance.now()-startTime)%speed}else{running=true;startTime=performance.now()-pausedCycleOffset;frame=requestAnimationFrame(tick)}button()}
+function freeze(value){if(!svg)return;running=false;cancelAnimationFrame(frame);frame=0;pausedCycleOffset=value?speed*.51:0;setPhase(value);button()}
 window.AnimEngine={start,stop,toggle,freeze,poses:POSES};
 })();
